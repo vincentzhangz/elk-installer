@@ -72,6 +72,60 @@ for i in "${APP_LIST[@]}"; do
    configure $i
 done
 
+if [[ $1 == "--xpack" ]]
+   then
+   echo "Configuring xpack..."
+   echo "
+xpack.security.enabled: true
+xpack.security.authc.api_key.enabled: true" >> ./config/elasticsearch/elasticsearch.yml
+
+   cp ./config/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
+   systemctl restart elasticsearch
+
+   RAW_PASSWORD_LIST=$(echo y | /usr/share/elasticsearch/bin/elasticsearch-setup-passwords auto)
+
+   if [ -z "$RAW_PASSWORD_LIST" ]
+      then
+      echo "Password list already generated"
+   else
+      echo "$RAW_PASSWORD_LIST" >> ./password
+      echo "Password list generated"
+   fi
+   # PASSWORD LIST ORDER
+   # 0 apm_system
+   # 1 kibana_system
+   # 2 kibana
+   # 3 logstash_system
+   # 4 beats_system
+   # 5 remote_monitoring_user
+   # 6 elastic
+
+   PASSWORD_LIST=()
+   IFS=', ' read -r -a temp <<< "$RAW_PASSWORD_LIST"
+
+   PATTERN="[a-zA-Z0-9]{20}$"
+
+   for index in "${!temp[@]}"
+   do
+   if  [[ ${temp[index]} =~ $PATTERN ]]; then
+      echo "${temp[index]}"
+      PASSWORD_LIST+=(${temp[index]})
+   fi
+   done
+
+   echo "
+elasticsearch.username: \"kibana_system\"
+elasticsearch.password: \"${PASSWORD_LIST[1]}\"" >> ./config/kibana/kibana.yml
+
+   echo "
+xpack.monitoring.enabled: true
+xpack.monitoring.elasticsearch.username: logstash_system
+xpack.monitoring.elasticsearch.password: ${PASSWORD_LIST[3]}
+xpack.monitoring.elasticsearch.hosts: [\"http://$IP_ADDRESS:9200\"]
+xpack.monitoring.collection.interval: 10s
+xpack.monitoring.collection.pipeline.details.enabled: true" >> ./config/logstash/logstash.yml
+fi
+
 for i in "${APP_LIST[@]}"; do
    :
    echo "Setting up config for $i..."
