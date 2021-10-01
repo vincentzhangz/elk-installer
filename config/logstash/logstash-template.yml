@@ -1,0 +1,4 @@
+path.data: /var/lib/logstash
+config.reload.automatic: true
+config.reload.interval: 3s
+path.logs: /var/log/logstash

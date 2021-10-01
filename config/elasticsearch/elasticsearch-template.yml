@@ -1,0 +1,4 @@
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
+network.host: IP_ADDRESS
+discovery.type: single-node

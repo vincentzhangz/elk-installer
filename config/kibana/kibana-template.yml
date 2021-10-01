@@ -1,0 +1,2 @@
+server.host: "IP_ADDRESS"
+elasticsearch.hosts: ["http://IP_ADDRESS:9200"]

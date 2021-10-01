@@ -1,0 +1,4 @@
+**/elasticsearch.yml
+**/jvm.options
+**/kibana.yml
+**/logstash.yml
